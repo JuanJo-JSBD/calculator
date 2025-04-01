@@ -33,6 +33,12 @@
 <body>
   <div class="container animate__animated animate__fadeIn">
     <h2 class="text-center mb-4">Calculadora de Gastos Diarios</h2>
+
+    <div class="mb-3">
+      <label for="fecha" class="form-label">Selecciona una fecha</label>
+      <input type="date" id="fecha" class="form-control" onchange="mostrarGastos()">
+    </div>
+
     <div class="mb-3">
       <label for="concepto" class="form-label">Concepto</label>
       <input type="text" id="concepto" class="form-control" placeholder="Ej: Comida, Transporte">
@@ -50,27 +56,59 @@
   </div>
 
   <script>
-    let total = 0;
+    let gastosPorFecha = {};
+
+    function obtenerFechaSeleccionada() {
+      const fechaInput = document.getElementById('fecha').value;
+      return fechaInput ? fechaInput : new Date().toISOString().split('T')[0];
+    }
 
     function agregarGasto() {
       const concepto = document.getElementById('concepto').value.trim();
       const monto = parseFloat(document.getElementById('monto').value);
+      const fecha = obtenerFechaSeleccionada();
+
       if (!concepto || isNaN(monto) || monto <= 0) {
         alert('Por favor ingresa un concepto válido y un monto mayor a 0.');
         return;
       }
 
-      total += monto;
-      document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+      if (!gastosPorFecha[fecha]) {
+        gastosPorFecha[fecha] = [];
+      }
 
-      const gastoItem = document.createElement('div');
-      gastoItem.className = 'gasto-item animate__animated animate__fadeInUp';
-      gastoItem.innerHTML = `<strong>${concepto}</strong>: $${monto.toFixed(2)}`;
-      document.getElementById('listaGastos').appendChild(gastoItem);
-
+      gastosPorFecha[fecha].push({ concepto, monto });
       document.getElementById('concepto').value = '';
       document.getElementById('monto').value = '';
+
+      mostrarGastos();
     }
+
+    function mostrarGastos() {
+      const fecha = obtenerFechaSeleccionada();
+      const lista = document.getElementById('listaGastos');
+      const totalEl = document.getElementById('total');
+      lista.innerHTML = '';
+
+      let total = 0;
+
+      if (gastosPorFecha[fecha]) {
+        gastosPorFecha[fecha].forEach(gasto => {
+          const gastoItem = document.createElement('div');
+          gastoItem.className = 'gasto-item animate__animated animate__fadeInUp';
+          gastoItem.innerHTML = `<strong>${gasto.concepto}</strong>: $${gasto.monto.toFixed(2)}`;
+          lista.appendChild(gastoItem);
+          total += gasto.monto;
+        });
+      }
+
+      totalEl.textContent = `$${total.toFixed(2)}`;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+      mostrarGastos();
+    });
   </script>
 </body>
 </html>
